@@ -92,8 +92,8 @@ async function handlePostRequest(context, req) {
 
 async function handlePutRequest(context, req) {
     try {
-        const requestBody = req.body; // Assuming the request body contains the updated createdBy value
-        const teamName = req.query.teamName; // Assuming the teamName is passed as a query parameter in the URL
+        const requestBody = req.body; // Assuming the request body contains the updated values
+        const teamName = requestBody.teamName; // Assuming teamName is part of the request body
 
         console.log('Received teamName:', teamName); // Add this line to log the received value
 
@@ -118,6 +118,7 @@ async function handlePutRequest(context, req) {
         };
     }
 }
+
 
 
 async function handleDeleteRequest(context, req) {
