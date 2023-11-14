@@ -1,15 +1,6 @@
 const sql = require('mssql');
 
-const config = {
-    server: '',
-    database: '',
-    user: '',
-    password: '',
-    options: {
-        encrypt: true,
-        enableArithAbort: true,
-    },
-};
+const connectionString = process.env.sqlConnection
 
 module.exports = async function (context, req) {
     switch (req.method) {
@@ -33,10 +24,10 @@ module.exports = async function (context, req) {
 async function handleGetRequest(context) {
     try {
         // Connect to the database
-        await sql.connect(config);
+        await sql.connect(connectionString);
 
         // Query the database
-        const result = await sql.query`SELECT id, firstName, teamName FROM names`;
+        const result = await sql.query`SELECT id, firstName, email, teamName FROM names`;
 
         // Close the database connection
         sql.close();
@@ -45,6 +36,7 @@ async function handleGetRequest(context) {
         const values = result.recordset.map((row) => ({
             id: row.id,
             firstName: row.firstName,
+            email: row.email,
             teamName: row.teamName,
         }));
 
@@ -67,10 +59,10 @@ async function handlePostRequest(context, req) {
         const requestBody = req.body; // Assuming the request body contains the data to be inserted
 
         // Connect to the database
-        await sql.connect(config);
+        await sql.connect(connectionString);
 
         // Perform the insert operation
-        await sql.query`INSERT INTO names (firstName, teamName) VALUES (${requestBody.firstName}, ${requestBody.teamName})`;
+        await sql.query`INSERT INTO names (firstName, email, teamName) VALUES (${requestBody.firstName}, ${requestBody.email}, ${requestBody.teamName})`;
 
         // Close the database connection
         sql.close();
@@ -93,7 +85,7 @@ async function handleDeleteRequest(context, req) {
         const id = req.query.id; // Assuming the id is passed as a query parameter
 
         // Connect to the database
-        await sql.connect(config);
+        await sql.connect(connectionString);
 
         // Perform the delete operation
         await sql.query`DELETE FROM names WHERE id = ${id}`;
