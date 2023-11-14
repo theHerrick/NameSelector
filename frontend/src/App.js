@@ -3,23 +3,29 @@ import { Navbar, Table, Form } from 'react-bootstrap';
 import { AiOutlineDelete, AiOutlineCheck } from 'react-icons/ai';
 import './styles.css'; // Import your CSS file
 
-const API_URL = 'https://nameselectorfa.azurewebsites.net/api/';
+const NAMES_API_URL = 'https://nameselectorfa.azurewebsites.net/api/names/';
+const TEAMS_API_URL = 'https://nameselectorfa.azurewebsites.net/api/teams/';
 
 function App() {
   const [data, setData] = useState([]);
+  const [teamNames, setTeamNames] = useState([]);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
+  // Set the initial team name to the first entry in the list
+  const initialTeamName = teamNames.length > 0 ? teamNames[0].teamName : '';
+
   const [newItem, setNewItem] = useState({
     id: '',
     firstName: '',
     email: '',
-    teamName: '',
+    teamName: initialTeamName,
   });
-  const [formSubmitted, setFormSubmitted] = useState(false);
 
-  const firstNameInputRef = useRef(null); // Ref for the first name input field
+  const firstNameInputRef = useRef(null);
 
   const fetchData = async () => {
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(NAMES_API_URL);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -32,24 +38,38 @@ function App() {
 
   useEffect(() => {
     fetchData();
-  }, []); // Empty dependency array ensures that this effect runs only once when the component mounts
+  }, []);
+
+  useEffect(() => {
+    const fetchTeamNames = async () => {
+      try {
+        const response = await fetch(TEAMS_API_URL);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const jsonData = await response.json();
+        setTeamNames(jsonData);
+      } catch (error) {
+        console.error('Error fetching team names:', error);
+      }
+    };
+
+    fetchTeamNames();
+  }, []);
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`${API_URL}?id=${id}`, {
+      const response = await fetch(`${NAMES_API_URL}?id=${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          // Add any additional headers if needed
         },
-        // Add any additional options like body or credentials if needed
       });
 
       if (!response.ok) {
         throw new Error('Failed to delete item');
       }
 
-      // Refetch data to update the table
       fetchData();
     } catch (error) {
       console.error('Error deleting item:', error);
@@ -64,16 +84,14 @@ function App() {
   };
 
   const handleAddItem = async () => {
-    // Set formSubmitted state to true when attempting to submit the form
     setFormSubmitted(true);
 
-    // Check if any of the required fields are empty
     if (!newItem.firstName || !newItem.email || !newItem.teamName) {
-      return; // Don't add an item if any of the required fields are empty
+      return;
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(NAMES_API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -85,20 +103,17 @@ function App() {
         throw new Error('Failed to add item');
       }
 
-      // Refetch data to update the table
       fetchData();
-      // Clear the input fields after adding the item
+
       setNewItem({
         id: '',
         firstName: '',
         email: '',
-        teamName: '',
+        teamName: initialTeamName, // Reset to the default team name
       });
 
-      // Focus on the first name input field after submit
       firstNameInputRef.current.focus();
 
-      // Reset the formSubmitted state
       setFormSubmitted(false);
     } catch (error) {
       console.error('Error adding item:', error);
@@ -119,6 +134,23 @@ function App() {
 
       <div className="container mt-4">
         <h1>Names</h1>
+
+        {/* Dropdown list for team names */}
+        <Form.Group>
+          <Form.Label>Select Team:</Form.Label>
+          <Form.Control
+            as="select"
+            value={newItem.teamName}
+            onChange={(e) => handleInputChange(e, 'teamName')}
+          >
+            {teamNames.map((team) => (
+              <option key={team.id} value={team.teamName}>
+                {team.teamName}
+              </option>
+            ))}
+          </Form.Control>
+        </Form.Group>
+
         <Table striped bordered hover>
           <thead>
             <tr>
