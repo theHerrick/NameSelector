@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Navbar, Table, Form } from 'react-bootstrap';
+import { Table, Form } from 'react-bootstrap';
 import { AiOutlineDelete, AiOutlineCheck } from 'react-icons/ai';
 import './styles.css'; // Import your CSS file
+import NavBar from './components/NavBar';
 
 const NAMES_API_URL = 'https://nameselectorfa.azurewebsites.net/api/names/';
 const TEAMS_API_URL = 'https://nameselectorfa.azurewebsites.net/api/teams/';
@@ -128,10 +129,7 @@ function App() {
 
   return (
     <div>
-      <Navbar bg="dark" variant="dark" expand="lg">
-        <Navbar.Brand href="#home">Edit Names</Navbar.Brand>
-      </Navbar>
-
+     <NavBar />
       <div className="container mt-4">
         <h1>Names</h1>
 
