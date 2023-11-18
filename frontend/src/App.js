@@ -9,6 +9,11 @@ function App() {
   const [selectedTeam, setSelectedTeam] = useState('');
   // State to store names data for the selected team
   const [names, setNames] = useState([]);
+  // State to store input values for the new row
+  const [newName, setNewName] = useState({
+    firstName: '',
+    email: '',
+  });
 
   // Function to fetch names data for the selected team
   const fetchNames = useCallback(async () => {
@@ -70,6 +75,33 @@ function App() {
     }
   };
 
+  const handleSubmit = async () => {
+    try {
+      // Send POST request to add a new row with the specified data
+      await fetch(`https://nameselectorfa.azurewebsites.net/api/names`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          teamName: selectedTeam,
+          firstName: newName.firstName,
+          email: newName.email,
+        }),
+      });
+
+      // After submission, refresh the table data
+      fetchNames();
+      // Clear input fields
+      setNewName({
+        firstName: '',
+        email: '',
+      });
+    } catch (error) {
+      console.error('Error submitting data:', error);
+    }
+  };
+
   return (
     <div>
       <NavBar />
@@ -117,6 +149,32 @@ function App() {
                 </td>
               </tr>
             ))}
+            {/* New row for adding a name */}
+            <tr>
+              <td>
+                <input
+                  type="text"
+                  value={newName.firstName}
+                  onChange={(e) => setNewName({ ...newName, firstName: e.target.value })}
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  value={newName.email}
+                  onChange={(e) => setNewName({ ...newName, email: e.target.value })}
+                />
+              </td>
+              <td>
+                {/* Submit icon with onClick handler */}
+                <span
+                  style={{ cursor: 'pointer', color: 'green' }}
+                  onClick={() => handleSubmit()}
+                >
+                  &#x2713;
+                </span>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
