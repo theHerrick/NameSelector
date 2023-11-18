@@ -4,6 +4,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import NavBar from './components/NavBar';
 import TeamDropdown from './components/TeamDropdown';
 import NameTable from './components/NameTable';
+import deleteHandler from './handlers/deleteHandler';
+import addNameHandler from './handlers/addNameHandler';
 
 function App() {
   const [teams, setTeams] = useState([]);
@@ -12,7 +14,7 @@ function App() {
 
   const fetchTeams = async () => {
     try {
-      const response = await fetch('https://nameselectorfa.azurewebsites.net/api/teams');
+      const response = await fetch(`${process.env.REACT_APP_API_ENDPOINT}teams`);
       const data = await response.json();
       setTeams(data);
       if (data.length > 0) {
@@ -27,7 +29,7 @@ function App() {
     if (selectedTeam) {
       try {
         const response = await fetch(
-          `https://nameselectorfa.azurewebsites.net/api/names?teamName=${selectedTeam}`
+          `${process.env.REACT_APP_API_ENDPOINT}names?teamName=${selectedTeam}`
         );
         const data = await response.json();
         setNames(data);
@@ -48,33 +50,11 @@ function App() {
   }, [selectedTeam, fetchNames]);
 
   const handleDelete = async (id) => {
-    try {
-      await fetch(`https://nameselectorfa.azurewebsites.net/api/names?id=${id}`, {
-        method: 'DELETE',
-      });
-      fetchNames();
-    } catch (error) {
-      console.error('Error deleting data:', error);
-    }
+    deleteHandler(id, fetchNames);
   };
 
   const handleAddName = async (newName) => {
-    try {
-      await fetch(`https://nameselectorfa.azurewebsites.net/api/names`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          teamName: selectedTeam,
-          firstName: newName.firstName,
-          email: newName.email,
-        }),
-      });
-      fetchNames();
-    } catch (error) {
-      console.error('Error submitting data:', error);
-    }
+    addNameHandler(selectedTeam, newName, fetchNames);
   };
 
   return (
@@ -83,7 +63,6 @@ function App() {
       <div className="container mt-4">
         <h1>Edit Names</h1>
         <TeamDropdown teams={teams} selectedTeam={selectedTeam} onChange={setSelectedTeam} />
-        {/* Ensure that the onAdd prop is correctly passed */}
         <NameTable names={names} onDelete={handleDelete} onAdd={handleAddName} />
       </div>
     </div>
