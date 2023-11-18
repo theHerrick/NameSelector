@@ -5,7 +5,14 @@ const connectionString = process.env.sqlConnection
 module.exports = async function (context, req) {
     switch (req.method) {
         case 'GET':
-            await handleGetRequest(context);
+            if (req.query && req.query.teamName) {
+                await handleGetRequest(context, connectionString, req.query.teamName);
+            } else {
+                context.res = {
+                    status: 400,
+                    body: "Please provide teamName."
+                };
+            }
             break;
         case 'POST':
             await handlePostRequest(context, req);
@@ -21,18 +28,15 @@ module.exports = async function (context, req) {
     }
 };
 
-async function handleGetRequest(context) {
+async function handleGetRequest(context, connectionString, teamName) {
     try {
-        // Connect to the database
         await sql.connect(connectionString);
 
-        // Query the database
-        const result = await sql.query`SELECT id, firstName, email, teamName FROM names`;
+        const result = 
+            await sql.query`SELECT * FROM names WHERE teamName = ${teamName}`;
 
-        // Close the database connection
         sql.close();
 
-        // Extract the rows from the result
         const values = result.recordset.map((row) => ({
             id: row.id,
             firstName: row.firstName,
@@ -40,19 +44,19 @@ async function handleGetRequest(context) {
             teamName: row.teamName,
         }));
 
-        // Return the values
         context.res = {
             status: 200,
-            body: values,
+            body: values
         };
     } catch (error) {
-        context.log.error('Error:', error);
+        context.log.error("Error", error);
         context.res = {
             status: 500,
-            body: 'An internal server error occurred.',
+            body: "An internal server error occured.",
         };
     }
 }
+
 
 async function handlePostRequest(context, req) {
     try {
