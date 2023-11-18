@@ -1,5 +1,5 @@
 // src/App.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import NavBar from './components/NavBar';
 
@@ -10,6 +10,22 @@ function App() {
   // State to store names data for the selected team
   const [names, setNames] = useState([]);
 
+  // Function to fetch names data for the selected team
+  const fetchNames = useCallback(async () => {
+    if (selectedTeam) {
+      try {
+        const response = await fetch(
+          `https://nameselectorfa.azurewebsites.net/api/names?teamName=${selectedTeam}`
+        );
+        const data = await response.json();
+        // Update the state with the fetched names data
+        setNames(data);
+      } catch (error) {
+        console.error('Error fetching names data:', error);
+      }
+    }
+  }, [selectedTeam]);
+
   useEffect(() => {
     // Function to fetch teams data from the API
     const fetchTeams = async () => {
@@ -18,6 +34,11 @@ function App() {
         const data = await response.json();
         // Update the state with the fetched teams data
         setTeams(data);
+
+        // Initialize selectedTeam with the first teamName
+        if (data.length > 0) {
+          setSelectedTeam(data[0].teamName);
+        }
       } catch (error) {
         console.error('Error fetching teams data:', error);
       }
@@ -28,25 +49,26 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Function to fetch names data for the selected team
-    const fetchNames = async () => {
-      if (selectedTeam) {
-        try {
-          const response = await fetch(
-            `https://nameselectorfa.azurewebsites.net/api/names?teamName=${selectedTeam}`
-          );
-          const data = await response.json();
-          // Update the state with the fetched names data
-          setNames(data);
-        } catch (error) {
-          console.error('Error fetching names data:', error);
-        }
-      }
-    };
+    // Only fetch names if selectedTeam is not an empty string
+    if (selectedTeam !== '') {
+      // Call the fetchNames function
+      fetchNames();
+    }
+  }, [selectedTeam, fetchNames]);
 
-    // Call the fetchNames function
-    fetchNames();
-  }, [selectedTeam]);
+  const handleDelete = async (id) => {
+    try {
+      // Send DELETE request to delete the row with the specified id
+      await fetch(`https://nameselectorfa.azurewebsites.net/api/names?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      // After deletion, refresh the table data
+      fetchNames();
+    } catch (error) {
+      console.error('Error deleting data:', error);
+    }
+  };
 
   return (
     <div>
@@ -75,6 +97,7 @@ function App() {
             <tr>
               <th>First Name</th>
               <th>Email</th>
+              <th>Delete</th>
             </tr>
           </thead>
           <tbody>
@@ -83,6 +106,15 @@ function App() {
               <tr key={name.id}>
                 <td>{name.firstName}</td>
                 <td>{name.email}</td>
+                <td>
+                  {/* Delete icon with onClick handler */}
+                  <span
+                    style={{ cursor: 'pointer', color: 'red' }}
+                    onClick={() => handleDelete(name.id)}
+                  >
+                    &#x274C;
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
