@@ -6,6 +6,8 @@ import TeamDropdown from './components/TeamDropdown';
 import NameTable from './components/NameTable';
 import deleteHandler from './handlers/deleteHandler';
 import addNameHandler from './handlers/addNameHandler';
+import { AuthenticatedTemplate, UnauthenticatedTemplate } from '@azure/msal-react';
+import { SignInButton } from './components/SignInButton';
 
 function App() {
   const [teams, setTeams] = useState([]);
@@ -59,12 +61,19 @@ function App() {
 
   return (
     <div>
+      <AuthenticatedTemplate>
       <NavBar />
       <div className="container mt-4">
         <h1>Edit Names</h1>
         <TeamDropdown teams={teams} selectedTeam={selectedTeam} onChange={setSelectedTeam} />
         <NameTable names={names} onDelete={handleDelete} onAdd={handleAddName} />
       </div>
+      </AuthenticatedTemplate>
+
+      <UnauthenticatedTemplate>
+        <SignInButton />
+      </UnauthenticatedTemplate>
+
     </div>
   );
 }
