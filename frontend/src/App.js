@@ -3,7 +3,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import {
   AuthenticatedTemplate,
   UnauthenticatedTemplate,
-  useAccount,
   useMsal,
 } from "@azure/msal-react";
 import NavBar from "./components/NavBar";
