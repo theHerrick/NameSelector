@@ -32,6 +32,5 @@ resource "azurerm_windows_function_app" "fa" {
   }
 
   app_settings = {
-    sqlConnection = "Server=tcp:nameselectorukssql.database.windows.net,1433;Database=nameselector;Authentication=Active Directory Default;"
   }
 }

@@ -1,47 +1,49 @@
-const sql = require('mssql');
-
-const connectionString = process.env.sqlConnection
+const sql = require("mssql");
 
 module.exports = async function (context, req) {
-    switch (req.method) {
-        case 'GET':
-            await handleGetRequest(context);
-            break;
-        default:
-            context.res = {
-                status: 405, // Method Not Allowed
-                body: 'Method not allowed.',
-            };
-    }
+  switch (req.method) {
+    case "GET":
+      await handleGetRequest(context);
+      break;
+    default:
+      context.res = {
+        status: 405,
+        body: "Method not allowed.",
+      };
+  }
 };
 
 async function handleGetRequest(context) {
-    try {
-        // Connect to the database
-        await sql.connect(connectionString);
+  try {
+    const pool = await sql.connect({
+      server: "nameselectorukssql.database.windows.net",
+      database: "nameselector",
+      authentication: {
+        type: "azure-active-directory-msi-app-service",
+      },
+      options: {
+        encrypt: true,
+        enableArithAbort: true,
+      },
+    });
 
-        // Query the database
-        const result = await sql.query`SELECT id, teamName FROM teams`;
+    const result = await pool.request().query("SELECT id, teamName FROM teams");
+    const values = result.recordset.map((row) => ({
+      id: row.id,
+      teamName: row.teamName,
+    }));
 
-        // Close the database connection
-        sql.close();
-
-        // Extract the rows from the result
-        const values = result.recordset.map((row) => ({
-            id: row.id,
-            teamName: row.teamName,
-        }));
-
-        // Return the values
-        context.res = {
-            status: 200,
-            body: values,
-        };
-    } catch (error) {
-        context.log.error('Error:', error);
-        context.res = {
-            status: 500,
-            body: 'An internal server error occurred.',
-        };
-    }
+    context.res = {
+      status: 200,
+      body: values,
+    };
+  } catch (error) {
+    context.log.error(`Error: ${error.message}`, error);
+    context.res = {
+      status: 500,
+      body: "An internal server error occurred.",
+    };
+  } finally {
+    sql.close();
+  }
 }

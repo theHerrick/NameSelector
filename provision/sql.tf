@@ -14,8 +14,16 @@ resource "azurerm_mssql_server" "sql" {
 
 }
 
+resource "azurerm_mssql_firewall_rule" "sql-fw" {
+  name             = "AllowMSServices"
+  server_id        = azurerm_mssql_server.sql.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
 resource "azurerm_mssql_database" "sqldb" {
   name         = "nameselector"
   server_id    = azurerm_mssql_server.sql.id
   sku_name     = "Basic"
 }
+
